@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ArXivLens">
+<title>ArXivLens</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+:root {
+  --bg:#F7F5F0;--surface:#FFFFFF;--ink:#1A1A1A;--mid:#6B6B6B;--faint:#E8E4DC;
+  --pink:#D4789A;--purple:#9B7EC8;--teal:#5BBFB5;--sage:#7BAE8A;--warm:#C89B6E;
+  --lp:#F5E6ED;--lpu:#EDE7F6;--lt:#E3F4F2;--ls:#EAF2EC;--lw:#F5EDE2;--lg:#F0F0F0;
+  --r:12px;--sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overscroll-behavior:none}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1.5px solid var(--faint);display:flex;z-index:200;padding-bottom:var(--sb)}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;font-size:.65rem;font-weight:500;color:var(--mid);cursor:pointer;border:none;background:none;font-family:'DM Sans',sans-serif;transition:color .2s;gap:3px}
+.nav-tab .ic{font-size:1.2rem;line-height:1}
+.nav-tab.active{color:var(--pink)}
+.page{display:none;padding:0 0 80px;min-height:100vh}
+.page.active{display:block}
+.ph{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1.5px solid var(--faint);padding:16px 18px}
+.logo{font-family:'DM Serif Display',serif;font-size:1.3rem}
+.logo span{color:var(--pink);font-style:italic}
+.tagline{font-size:.72rem;color:var(--mid);margin-top:1px}
+.ph-row{display:flex;align-items:center;justify-content:space-between}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px}
+.card{background:var(--surface);border-radius:var(--r);border:1.5px solid var(--faint);padding:20px;margin-bottom:16px}
+.ct{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ct::after{content:'';flex:1;height:1px;background:var(--faint)}
+.url-row{display:flex;gap:8px}
+.url-in{flex:1;font-family:'DM Mono',monospace;font-size:.82rem;padding:11px 13px;border:1.5px solid var(--faint);border-radius:8px;background:var(--bg);color:var(--ink);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.url-in:focus{border-color:var(--pink)}
+.url-in::placeholder{color:#B8B0A4}
+.btn{padding:11px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;transition:opacity .2s,transform .1s;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.b-pink{background:var(--pink);color:#fff}
+.b-purple{background:var(--purple);color:#fff}
+.b-teal{background:var(--teal);color:#fff}
+.b-sage{background:var(--sage);color:#fff}
+.b-ghost{background:none;border:1.5px solid var(--faint);color:var(--mid);font-family:'DM Sans',sans-serif}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.status{display:none;align-items:center;gap:10px;margin-top:12px;font-size:.8rem;color:var(--mid)}
+.status.on{display:flex}
+.spin{width:15px;height:15px;border:2px solid var(--faint);border-top-color:var(--pink);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pmeta{display:none}
+.pmeta.on{display:block}
+.ptitle{font-family:'DM Serif Display',serif;font-size:1.15rem;line-height:1.45;margin-bottom:6px}
+.pauth{font-size:.78rem;color:var(--mid);margin-bottom:12px}
+.abtog{font-size:.76rem;color:var(--pink);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:inherit;padding:0}
+.abody{display:none;margin-top:10px;font-size:.82rem;line-height:1.7;color:#444;padding:12px;background:var(--bg);border-radius:8px}
+.abody.on{display:block}
+.pw{margin-bottom:16px;display:none}
+.pw.on{display:block}
+.pm{font-size:.74rem;color:var(--mid);display:flex;justify-content:space-between;margin-bottom:5px}
+.pb{height:5px;background:var(--faint);border-radius:5px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));border-radius:5px;transition:width .4s ease}
+.sblock{background:var(--surface);border-radius:var(--r);border:1.5px solid var(--faint);overflow:hidden;margin-bottom:14px;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.shd{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--faint);background:var(--bg)}
+.pill{font-size:.64rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.pi{background:var(--lp);color:var(--pink)}
+.pd{background:var(--lpu);color:var(--purple)}
+.pt{background:var(--lt);color:var(--teal)}
+.pp{background:var(--ls);color:var(--sage)}
+.pe{background:var(--lw);color:var(--warm)}
+.po{background:var(--lg);color:#888}
+.stitle{font-family:'DM Serif Display',serif;font-size:.92rem;flex:1}
+.sdone{font-size:.64rem;color:var(--sage);background:var(--ls);border:1px solid #C8E6CC;padding:2px 8px;border-radius:20px}
+.sbd{padding:16px}
+.msg{display:flex;gap:10px;margin-bottom:12px}
+.av{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;margin-top:2px}
+.av-ai{background:var(--lp);color:var(--pink)}
+.av-u{background:var(--lg);color:var(--mid)}
+.mt{flex:1;font-size:.85rem;line-height:1.7}
+.mt-u{color:var(--mid);font-style:italic}
+.qbox{background:linear-gradient(135deg,#FDF5F8,#F5EEF8);border:1.5px solid #EDD8E8;border-radius:10px;padding:13px 15px;margin-bottom:12px}
+.ql{font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--pink);margin-bottom:5px}
+.qt{font-size:.87rem;line-height:1.6;font-weight:500}
+.ata{width:100%;font-family:'DM Sans',sans-serif;font-size:.84rem;padding:10px 12px;border:1.5px solid var(--faint);border-radius:8px;background:var(--bg);color:var(--ink);resize:none;outline:none;transition:border-color .2s;min-height:72px;line-height:1.5;-webkit-appearance:none}
+.ata:focus{border-color:var(--purple)}
+.brow{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;flex-wrap:wrap}
+.bsm{padding:7px 14px;font-size:.78rem;border-radius:7px}
+.ibox{border-radius:8px;padding:11px 13px;font-size:.82rem;line-height:1.65;margin-bottom:11px;animation:fu .2s ease}
+.hbox{background:var(--lt);border:1px solid #C8EAE7;color:#2D6B65}
+.fbbox{background:var(--lpu);border:1px solid #DDD0F0;color:#4A3272}
+.cbox{background:var(--lw);border:1px solid #E8D5B8;color:#6B4E2A}
+.dbox{background:var(--ls);border:1px solid #C8E6CC;color:#2D5A35}
+.il{font-size:.64rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.hl{color:var(--teal)}
+.fbl{color:var(--purple)}
+.cl{color:var(--warm)}
+.dl{color:var(--sage)}
+.fua{margin-top:10px;border-top:1px solid var(--faint);padding-top:10px}
+.ful{font-size:.72rem;color:var(--mid);margin-bottom:6px}
+.futa{width:100%;font-family:'DM Sans',sans-serif;font-size:.83rem;padding:9px 12px;border:1.5px solid var(--faint);border-radius:8px;background:var(--bg);color:var(--ink);resize:none;outline:none;min-height:56px;transition:border-color .2s;-webkit-appearance:none}
+.futa:focus{border-color:var(--pink)}
+.nw{text-align:center;padding:12px 0 4px}
+.ldots span{animation:blink 1.2s infinite;font-size:1.1rem;color:var(--pink)}
+.ldots span:nth-child(2){animation-delay:.2s}
+.ldots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}
+.ebox{background:#FFF0F0;border:1px solid #F5C6C6;border-radius:8px;padding:12px;font-size:.82rem;color:#C0392B}
+.hempty{text-align:center;padding:60px 20px;color:var(--mid);font-size:.88rem}
+.hi{display:flex;align-items:flex-start;gap:12px;background:var(--surface);border:1.5px solid var(--faint);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .2s;animation:fu .25s ease}
+.hi:hover{border-color:var(--pink)}
+.hic{font-size:1.5rem;flex-shrink:0}
+.hin{flex:1;min-width:0}
+.hit{font-family:'DM Serif Display',serif;font-size:.9rem;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.him{font-size:.72rem;color:var(--mid)}
+.hip{font-size:.7rem;margin-top:4px}
+.pd2{display:inline-flex;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot-d{background:var(--sage)}
+.dot-a{background:var(--pink)}
+.dot-p{background:var(--faint)}
+.hdel{background:none;border:none;color:var(--mid);font-size:1rem;cursor:pointer;padding:2px 4px;border-radius:4px;flex-shrink:0}
+.hdel:hover{color:#C0392B}
+.rc{background:var(--surface);border:1.5px solid var(--faint);border-radius:var(--r);padding:20px;margin-bottom:14px;animation:fu .3s ease}
+.rq{font-size:.87rem;line-height:1.6;font-weight:500;margin-bottom:10px}
+.rx{font-size:.75rem;color:var(--mid);margin-bottom:12px}
+.rbs{display:flex;gap:8px}
+.brev{background:var(--lpu);color:var(--purple);border:1px solid #DDD0F0;font-family:'DM Sans',sans-serif}
+.rans{display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:8px;font-size:.83rem;line-height:1.65}
+.rans.on{display:block}
+.rempty{text-align:center;padding:60px 20px;color:var(--mid);font-size:.88rem}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.sc{background:var(--surface);border:1.5px solid var(--faint);border-radius:var(--r);padding:16px;text-align:center}
+.sn{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--pink)}
+.sl{font-size:.72rem;color:var(--mid);margin-top:2px}
+.ctag{display:inline-block;background:var(--lpu);color:var(--purple);border:1px solid #DDD0F0;padding:4px 10px;border-radius:20px;font-size:.75rem;margin:3px}
+.bdgw{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.bdg{display:flex;align-items:center;gap:5px;background:var(--surface);border:1.5px solid var(--faint);border-radius:10px;padding:8px 12px;font-size:.75rem;color:var(--mid)}
+.bdg.on{border-color:var(--warm);background:var(--lw);color:var(--warm)}
+.bdgi{font-size:1.1rem}
+.strk{background:linear-gradient(135deg,var(--lp),var(--lpu));border:1.5px solid #EDD8E8;border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.strn{font-family:'DM Serif Display',serif;font-size:2.5rem;color:var(--pink);line-height:1}
+.stri{flex:1}
+.strt{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.strs{font-size:.75rem;color:var(--mid)}
+@media(max-width:480px){.sgrid{grid-template-columns:1fr}.url-row{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="page active" id="page-read">
+  <div class="ph">
+    <div class="ph-row">
+      <div><div class="logo">arxiv<span>lens</span></div><div class="tagline">Construis ton intuition mathématique</div></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="card">
+      <div class="ct">Lien ArXiv</div>
+      <div class="url-row">
+        <input class="url-in" id="urlInput" type="url" placeholder="https://arxiv.org/abs/2301.00001" autocomplete="off" autocorrect="off" autocapitalize="none"/>
+        <button class="btn b-pink" id="loadBtn" onclick="loadPaper()">Analyser</button>
+      </div>
+      <div class="status" id="statusBar"><div class="spin"></div><span id="statusText">Chargement…</span></div>
+    </div>
+    <div class="pmeta card" id="paperMeta">
+      <div class="ptitle" id="paperTitle"></div>
+      <div class="pauth" id="paperAuthors"></div>
+      <button class="abtog" onclick="toggleAb()">Voir le résumé</button>
+      <div class="abody" id="abstractText"></div>
+    </div>
+    <div class="pw" id="pw">
+      <div class="pm"><span id="pl">0 / 0 sections</span><span id="pp">0%</span></div>
+      <div class="pb"><div class="pf" id="pf" style="width:0%"></div></div>
+    </div>
+    <div id="chatArea"></div>
+  </div>
+</div>
+
+<div class="page" id="page-history">
+  <div class="ph"><div class="ph-row"><div class="logo">Historique</div><button class="btn b-ghost bsm" onclick="clearHistory()">Tout effacer</button></div></div>
+  <div class="wrap" id="historyList"><div class="hempty">Aucun article lu pour l'instant.</div></div>
+</div>
+
+<div class="page" id="page-review">
+  <div class="ph"><div class="ph-row"><div><div class="logo">Révisions</div><div class="tagline">Rappel espacé de tes questions</div></div><button class="btn b-sage bsm" onclick="generateReview()">Générer</button></div></div>
+  <div class="wrap" id="reviewArea"><div class="rempty">Lis un article pour générer des révisions !</div></div>
+</div>
+
+<div class="page" id="page-stats">
+  <div class="ph"><div class="ph-row"><div class="logo">Mon progrès</div></div></div>
+  <div class="wrap" id="statsArea"></div>
+</div>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="switchTab('read',this)"><span class="ic">📖</span>Lire</button>
+  <button class="nav-tab" onclick="switchTab('history',this)"><span class="ic">🗂️</span>Historique</button>
+  <button class="nav-tab" onclick="switchTab('review',this)"><span class="ic">🔁</span>Révisions</button>
+  <button class="nav-tab" onclick="switchTab('stats',this)"><span class="ic">📊</span>Progrès</button>
+</nav>
+
+<script>
+const DB={
+  get:k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  papers:()=>DB.get('al_papers')||[],
+  savePaper:p=>{const a=DB.papers().filter(x=>x.id!==p.id);a.unshift(p);DB.set('al_papers',a.slice(0,30))},
+  stats:()=>DB.get('al_stats')||{articlesRead:0,sectionsCompleted:0,questionsAnswered:0,concepts:[],streak:0,lastDate:null},
+  saveStats:s=>DB.set('al_stats',s),
+  reviews:()=>DB.get('al_reviews')||[],
+  saveReview:r=>{const a=DB.reviews();a.push(r);DB.set('al_reviews',a.slice(-100))}
+};
+
+const S={paper:null,sections:[],states:[],answers:[],feedbacks:[],concepts:[]};
+
+function switchTab(tab,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  el.classList.add('active');
+  if(tab==='history')renderHistory();
+  if(tab==='stats')renderStats();
+}
+
+function extId(url){const m=url.match(/arxiv\.org\/(?:abs|pdf)\/([0-9]+\.[0-9]+(?:v\d+)?)/i);return m?m[1]:null}
+
+async function loadPaper(){
+  const url=document.getElementById('urlInput').value.trim();
+  const id=extId(url);
+  if(!id){alert('Lien ArXiv invalide.');return}
+  document.getElementById('loadBtn').disabled=true;
+  setStatus(true,'Récupération des métadonnées ArXiv…');
+  document.getElementById('chatArea').innerHTML='';
+  document.getElementById('paperMeta').classList.remove('on');
+  document.getElementById('pw').classList.remove('on');
+  Object.assign(S,{paper:null,sections:[],states:[],answers:[],feedbacks:[],concepts:[]});
+  try{
+    const res=await fetch(`https://export.arxiv.org/api/query?id_list=${id}`);
+    const txt=await res.text();
+    const xml=new DOMParser().parseFromString(txt,'application/xml');
+    const entry=xml.querySelector('entry');
+    if(!entry)throw new Error('Article introuvable sur ArXiv.');
+    const title=entry.querySelector('title')?.textContent.trim().replace(/\s+/g,' ')||'Sans titre';
+    const summary=entry.querySelector('summary')?.textContent.trim().replace(/\s+/g,' ')||'';
+    const authors=[...entry.querySelectorAll('author name')].map(n=>n.textContent).join(', ');
+    S.paper={id,title,summary,authors,url};
+    document.getElementById('paperTitle').textContent=title;
+    document.getElementById('paperAuthors').textContent=authors;
+    document.getElementById('abstractText').textContent=summary;
+    document.getElementById('paperMeta').classList.add('on');
+    setStatus(true,'Analyse pédagogique par l\'IA…');
+    await initSections(title,summary);
+  }catch(e){
+    setStatus(false);
+    document.getElementById('loadBtn').disabled=false;
+    document.getElementById('chatArea').innerHTML=`<div class="ebox">⚠️ ${e.message}</div>`;
+  }
+}
+
+async function initSections(title,abstract){
+  const prompt=`Tu es un tuteur expert en mathématiques. Article ArXiv :
+Titre : ${title}
+Résumé : ${abstract}
+
+Décompose en 5-7 sections pédagogiques. Pour chaque section :
+- "type" : "intro"|"def"|"thm"|"proof"|"ex"|"other"
+- "title" : titre court (max 6 mots)
+- "summary" : 2-3 phrases factuelles sur le contenu
+- "question" : UNE question socratique ouverte commençant par "Pourquoi…","Comment…","Que se passerait-il si…","Quelle est ton intuition sur…","Quel problème…" — doit pousser à réfléchir AVANT de connaître la réponse
+- "concept" : 1-2 mots clés mathématiques de cette section
+- "difficulty" : 1, 2 ou 3
+
+Réponds UNIQUEMENT en JSON valide sans markdown :
+[{"type":"...","title":"...","summary":"...","question":"...","concept":"...","difficulty":1},...]`;
+  const resp=await callClaude(prompt);
+  let sections;
+  try{const raw=resp.replace(/\`\`\`json|\`\`\`/g,'').trim();const m=raw.match(/\[[\s\S]*\]/);sections=JSON.parse(m?m[0]:raw)}
+  catch{throw new Error('Réponse IA invalide. Réessaie.')}
+  S.sections=sections;S.states=sections.map(()=>'pending');S.answers=sections.map(()=>null);S.feedbacks=sections.map(()=>null);S.concepts=sections.map(s=>s.concept).filter(Boolean);
+  setStatus(false);document.getElementById('loadBtn').disabled=false;
+  document.getElementById('pw').classList.add('on');updateProgress();renderSection(0);
+}
+
+function renderSection(idx){
+  const s=S.sections[idx];const area=document.getElementById('chatArea');S.states[idx]='active';
+  const pm={intro:'pi',def:'pd',thm:'pt',proof:'pp',ex:'pe',other:'po'};
+  const lm={intro:'Introduction',def:'Définition',thm:'Théorème',proof:'Preuve',ex:'Exemple',other:'Section'};
+  const dl=['','★☆☆','★★☆','★★★'][s.difficulty]||'★☆☆';
+  const b=document.createElement('div');b.className='sblock';b.id=`s${idx}`;
+  b.innerHTML=`
+    <div class="shd">
+      <span class="pill ${pm[s.type]||'po'}">${lm[s.type]||'Section'}</span>
+      <span class="stitle">${s.title}</span>
+      <span style="font-size:.72rem;color:var(--mid)">${dl}</span>
+    </div>
+    <div class="sbd" id="bd${idx}">
+      <div class="msg"><div class="av av-ai">AI</div><div class="mt">${s.summary}</div></div>
+      <div class="qbox"><div class="ql">🧠 Question intuition</div><div class="qt">${s.question}</div></div>
+      <div id="ans${idx}">
+        <textarea class="ata" id="ta${idx}" placeholder="Écris ton intuition, même approximative. Pas de mauvaise réponse — l'important c'est de réfléchir avant de lire." rows="3"></textarea>
+        <div class="brow">
+          <button class="btn b-ghost bsm" onclick="getHint(${idx})">💡 Indice</button>
+          <button class="btn b-ghost bsm" onclick="getConcept(${idx})">🔑 Concept</button>
+          <button class="btn b-purple bsm" onclick="submitAnswer(${idx})">Valider →</button>
+        </div>
+      </div>
+      <div id="ex${idx}"></div>
+    </div>`;
+  area.appendChild(b);
+  setTimeout(()=>b.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+}
+
+async function getHint(idx){
+  const s=S.sections[idx];const ex=document.getElementById(`ex${idx}`);
+  if(ex.querySelector('.hbox'))return;
+  const ld=mkLd();ex.appendChild(ld);
+  const hint=await callClaude(`Article : "${S.paper.title}"\nSection "${s.title}" : ${s.summary}\nQuestion : "${s.question}"\n\nIndice socratique en 2-3 phrases : oriente la pensée sans donner la réponse. Suggère une analogie ou un cas simple. Pas de listes.`);
+  ld.remove();const box=document.createElement('div');box.className='ibox hbox';
+  box.innerHTML=`<div class="il hl">💡 Indice</div>${hint}`;ex.insertBefore(box,ex.firstChild);
+}
+
+async function getConcept(idx){
+  const s=S.sections[idx];const ex=document.getElementById(`ex${idx}`);
+  if(ex.querySelector('.cbox'))return;
+  const ld=mkLd();ex.appendChild(ld);
+  const resp=await callClaude(`Article : "${S.paper.title}"\nConcept clé de la section "${s.title}" : "${s.concept}"\n\nExplique ce concept en 3-4 phrases accessibles avec une intuition géométrique ou physique si possible. Concis. Pas de listes.`);
+  ld.remove();const box=document.createElement('div');box.className='ibox cbox';
+  box.innerHTML=`<div class="il cl">🔑 ${s.concept}</div>${resp}`;ex.insertBefore(box,ex.firstChild);
+}
+
+async function submitAnswer(idx){
+  const answer=document.getElementById(`ta${idx}`).value.trim();
+  if(!answer){alert('Écris quelque chose, même une intuition approximative !');return}
+  S.answers[idx]=answer;
+  document.getElementById(`ta${idx}`).disabled=true;
+  document.querySelector(`#s${idx} .brow`).style.display='none';
+  const bd=document.getElementById(`bd${idx}`);
+  bd.appendChild(mkMsg('u',answer));
+  const ld=mkLd();bd.appendChild(ld);
+  const s=S.sections[idx];
+  const fb=await callClaude(`Tuteur bienveillant en maths. TON RÔLE : guider, pas corriger.
+Article : "${S.paper.title}" — Section "${s.title}" : ${s.summary}
+Question : "${s.question}"
+Réponse étudiant : "${answer}"
+
+Feedback 4-5 phrases :
+1. Ce qui est juste ou intuitif (précis, pas générique)
+2. Ce qui manque ou peut être approfondi
+3. Idée clé à retenir pour l'intuition
+4. UNE question de suivi pour aller plus loin
+
+Ne donne PAS la réponse complète. Guide vers la compréhension. Prose fluide, pas de listes.`);
+  ld.remove();S.feedbacks[idx]=fb;
+  const fbBox=document.createElement('div');fbBox.className='ibox fbbox';
+  fbBox.innerHTML=`<div class="il fbl">✦ Feedback</div>${fb}`;bd.appendChild(fbBox);
+  const deepRow=document.createElement('div');deepRow.className='brow';
+  deepRow.innerHTML=`<button class="btn b-ghost bsm" onclick="goDeeper(${idx},this)">🔭 Aller plus loin</button>`;
+  bd.appendChild(deepRow);
+  const fuArea=document.createElement('div');fuArea.className='fua';
+  fuArea.innerHTML=`<div class="ful">Une question sur cette section ?</div><textarea class="futa" id="fu${idx}" placeholder="Ex : Pourquoi ce théorème suppose-t-il cette condition ?" rows="2"></textarea><div class="brow" style="margin-top:6px"><button class="btn b-teal bsm" onclick="askFollowup(${idx})">Demander →</button></div>`;
+  bd.appendChild(fuArea);
+  S.states[idx]='done';
+  document.querySelector(`#s${idx} .shd`).insertAdjacentHTML('beforeend','<span class="sdone">✓</span>');
+  updateProgress();
+  DB.saveReview({paperId:S.paper.id,paperTitle:S.paper.title,section:s.title,question:s.question,concept:s.concept,answer,feedback:fb,date:new Date().toISOString()});
+  const stats=DB.stats();stats.questionsAnswered++;stats.sectionsCompleted++;
+  if(!stats.concepts.includes(s.concept))stats.concepts.push(s.concept);
+  const today=new Date().toDateString();
+  if(stats.lastDate!==today){stats.streak=(stats.lastDate===new Date(Date.now()-86400000).toDateString())?stats.streak+1:1;stats.lastDate=today}
+  DB.saveStats(stats);
+  if(idx+1<S.sections.length){
+    const nw=document.createElement('div');nw.className='nw';
+    nw.innerHTML=`<button class="btn b-teal" onclick="goNext(${idx+1},this.parentElement)">Section suivante : ${S.sections[idx+1].title} →</button>`;
+    bd.appendChild(nw);
+  }else{finishPaper(bd)}
+}
+
+async function goDeeper(idx,btn){
+  btn.disabled=true;const s=S.sections[idx];const bd=document.getElementById(`bd${idx}`);
+  const ld=mkLd();bd.appendChild(ld);
+  const resp=await callClaude(`Article : "${S.paper.title}" — Section "${s.title}" : ${s.summary}\nRéponse étudiant : "${S.answers[idx]}"\n\nPropose 2-3 pistes pour aller plus loin :\n- connexion avec d'autres domaines maths\n- question ouverte que les chercheurs se posent\n- intuition géométrique ou physique\nDense, précis, stimulant. 4-5 phrases. Pas de listes.`);
+  ld.remove();const box=document.createElement('div');box.className='ibox dbox';
+  box.innerHTML=`<div class="il dl">🔭 Pour aller plus loin</div>${resp}`;bd.appendChild(box);
+}
+
+async function askFollowup(idx){
+  const q=document.getElementById(`fu${idx}`).value.trim();if(!q)return;
+  document.getElementById(`fu${idx}`).disabled=true;
+  document.querySelector(`#bd${idx} .fua .brow`).style.display='none';
+  const s=S.sections[idx];const bd=document.getElementById(`bd${idx}`);
+  bd.appendChild(mkMsg('u',q));const ld=mkLd();bd.appendChild(ld);
+  const resp=await callClaude(`Article maths "${S.paper.title}", section "${s.title}" : ${s.summary}\nQuestion étudiant : "${q}"\n\nRéponds de façon socratique : reformule ce que la question sous-entend, guide vers la réponse sans la donner. 3-4 phrases. Stimule la réflexion.`);
+  ld.remove();bd.appendChild(mkMsg('ai',resp));
+}
+
+async function finishPaper(bd){
+  const paper={...S.paper,sections:S.sections,states:S.states,answers:S.answers,feedbacks:S.feedbacks,completedAt:new Date().toISOString(),done:true};
+  DB.savePaper(paper);const stats=DB.stats();stats.articlesRead++;DB.saveStats(stats);
+  const ld=mkLd();bd.appendChild(ld);
+  const synth=await callClaude(`L'étudiant vient de finir "${S.paper.title}".\nSections : ${S.sections.map((s,i)=>`"${s.title}" → "${S.answers[i]}"`).join(' | ')}\n\nSynthèse pédagogique 4-5 phrases :\n1. Fil directeur de l'article\n2. 2-3 idées clés à retenir\n3. Place dans le paysage mathématique\n4. Un défi personnel pour continuer\nInspirant et précis.`);
+  ld.remove();
+  const box=document.createElement('div');
+  box.innerHTML=`<div class="ibox dbox" style="margin-bottom:10px"><div class="il dl">🎓 Synthèse</div>${synth}</div><div style="text-align:center;padding:16px 0 4px"><div style="font-size:1.5rem;margin-bottom:6px">✨</div><div style="font-family:'DM Serif Display',serif;font-size:1rem;margin-bottom:4px">Article terminé !</div><div style="font-size:.8rem;color:var(--mid)">Retrouve-le dans l'historique et révise dans l'onglet Révisions.</div></div>`;
+  bd.appendChild(box);
+}
+
+function goNext(idx,el){el.remove();renderSection(idx)}
+
+function renderHistory(){
+  const list=document.getElementById('historyList');const papers=DB.papers();
+  if(!papers.length){list.innerHTML='<div class="hempty">Aucun article lu pour l\'instant.<br>Commence par analyser un lien ArXiv !</div>';return}
+  list.innerHTML='';
+  papers.forEach(p=>{
+    const done=(p.states||[]).filter(s=>s==='done').length;const total=(p.sections||[]).length;
+    const dots=(p.sections||[]).map((_,i)=>`<span class="dot ${p.states[i]==='done'?'dot-d':p.states[i]==='active'?'dot-a':'dot-p'}"></span>`).join('');
+    const date=p.completedAt?new Date(p.completedAt).toLocaleDateString('fr-FR'):'';
+    const item=document.createElement('div');item.className='hi';
+    item.innerHTML=`<div class="hic">${p.done?'✅':'📄'}</div><div class="hin"><div class="hit">${p.title}</div><div class="him">${p.authors?.split(',')[0]||''} · ${date}</div><div class="hip"><span class="pd2">${dots}</span> <span style="color:var(--mid);font-size:.7rem">${done}/${total} sections</span></div></div><button class="hdel" onclick="event.stopPropagation();delPaper('${p.id}')">✕</button>`;
+    item.addEventListener('click',()=>{document.getElementById('urlInput').value=p.url||`https://arxiv.org/abs/${p.id}`;switchTab('read',document.querySelector('.nav-tab'));loadPaper()});
+    list.appendChild(item);
+  });
+}
+function delPaper(id){DB.set('al_papers',DB.papers().filter(p=>p.id!==id));renderHistory()}
+function clearHistory(){if(confirm('Effacer tout l\'historique ?')){DB.set('al_papers',[]);renderHistory()}}
+
+async function generateReview(){
+  const area=document.getElementById('reviewArea');const reviews=DB.reviews();
+  if(!reviews.length){area.innerHTML='<div class="rempty">Lis un article pour générer des révisions !</div>';return}
+  area.innerHTML='<div style="padding:30px;text-align:center" class="ldots"><span>•</span><span>•</span><span>•</span></div>';
+  const picked=reviews.sort(()=>Math.random()-.5).slice(0,5);
+  area.innerHTML=`<div class="ct">Rappel espacé · ${picked.length} questions</div>`;
+  picked.forEach((r,i)=>{
+    const c=document.createElement('div');c.className='rc';
+    c.innerHTML=`<div class="rx">${r.paperTitle} · ${r.section}</div><div class="rq">${r.question}</div><div class="rbs"><button class="btn brev bsm" onclick="toggleRev(this,${i})">Voir ma réponse</button></div><div class="rans" id="rev${i}"><strong style="font-size:.72rem;color:var(--purple);text-transform:uppercase;letter-spacing:.08em">Ta réponse :</strong><br>${r.answer}<br><br><strong style="font-size:.72rem;color:var(--purple);text-transform:uppercase;letter-spacing:.08em">Feedback :</strong><br>${r.feedback}</div>`;
+    area.appendChild(c);
+  });
+}
+function toggleRev(btn,idx){const el=document.getElementById(`rev${idx}`);el.classList.toggle('on');btn.textContent=el.classList.contains('on')?'Masquer':'Voir ma réponse'}
+
+function renderStats(){
+  const stats=DB.stats();const papers=DB.papers();const area=document.getElementById('statsArea');
+  const badges=[
+    {ic:'🌱',l:'Premier article',on:papers.length>=1},
+    {ic:'📚',l:'5 articles',on:papers.length>=5},
+    {ic:'🧠',l:'10 questions',on:(stats.questionsAnswered||0)>=10},
+    {ic:'🔥',l:'3 jours de suite',on:(stats.streak||0)>=3},
+    {ic:'🎓',l:'20 sections',on:(stats.sectionsCompleted||0)>=20},
+    {ic:'🔭',l:'10 concepts',on:(stats.concepts||[]).length>=10},
+  ];
+  area.innerHTML=`
+    <div class="strk"><div class="strn">${stats.streak||0}</div><div class="stri"><div class="strt">🔥 Jours consécutifs</div><div class="strs">Continue comme ça !</div></div></div>
+    <div class="sgrid">
+      <div class="sc"><div class="sn">${papers.length}</div><div class="sl">Articles lus</div></div>
+      <div class="sc"><div class="sn">${stats.sectionsCompleted||0}</div><div class="sl">Sections complétées</div></div>
+      <div class="sc"><div class="sn">${stats.questionsAnswered||0}</div><div class="sl">Questions répondues</div></div>
+      <div class="sc"><div class="sn">${(stats.concepts||[]).length}</div><div class="sl">Concepts explorés</div></div>
+    </div>
+    ${(stats.concepts||[]).length?`<div class="card"><div class="ct">Concepts explorés</div>${(stats.concepts||[]).map(c=>`<span class="ctag">${c}</span>`).join('')}</div>`:''}
+    <div class="card"><div class="ct">Badges</div><div class="bdgw">${badges.map(b=>`<div class="bdg ${b.on?'on':''}"><span class="bdgi">${b.ic}</span>${b.l}</div>`).join('')}</div></div>`;
+}
+
+function updateProgress(){
+  const done=S.states.filter(s=>s==='done').length;const total=S.sections.length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('pl').textContent=`${done} / ${total} sections`;
+  document.getElementById('pp').textContent=`${pct}%`;
+  document.getElementById('pf').style.width=`${pct}%`;
+}
+function setStatus(on,text=''){document.getElementById('statusText').textContent=text;document.getElementById('statusBar').classList.toggle('on',on)}
+function toggleAb(){document.getElementById('abstractText').classList.toggle('on')}
+function mkLd(){const d=document.createElement('div');d.style.padding='8px 0';d.innerHTML='<div class="ldots"><span>•</span><span>•</span><span>•</span></div>';return d}
+function mkMsg(type,text){const d=document.createElement('div');d.className='msg';d.innerHTML=`<div class="av ${type==='ai'?'av-ai':'av-u'}">${type==='ai'?'AI':'Toi'}</div><div class="mt ${type==='u'?'mt-u':''}">${text}</div>`;return d}
+async function callClaude(prompt){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+  const data=await res.json();if(data.error)throw new Error(data.error.message);
+  return data.content.map(b=>b.text||'').join('');
+}
+</script>
+</body>
+</html>
