@@ -236,8 +236,9 @@ async function loadPaper(){
   document.getElementById('pw').classList.remove('on');
   Object.assign(S,{paper:null,sections:[],states:[],answers:[],feedbacks:[],concepts:[]});
   try{
-    const res=await fetch(`https://export.arxiv.org/api/query?id_list=${id}`);
-    const txt=await res.text();
+    const arxivUrl=`https://export.arxiv.org/api/query?id_list=${id}`;
+    const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(arxivUrl)}`);
+    const j=await res.json();const txt=j.contents;
     const xml=new DOMParser().parseFromString(txt,'application/xml');
     const entry=xml.querySelector('entry');
     if(!entry)throw new Error('Article introuvable sur ArXiv.');
